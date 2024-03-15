@@ -1,0 +1,329 @@
+'Required for All:
+'WorkOrderNumber
+'WorkOrderSuffix
+'WorkOrderSequence
+'RouterNumber (Optional)
+'RouterSequence (Optional)
+'StartDate
+'DueDate
+'Rate
+'ProjectGroup (Optional)
+'DoNotSaveChangesBackToRouter (Optional)
+'Overlap (Optional)
+
+'Material:
+'OpCode (as OpCode) (Optional)
+'SetupFlag (Optional)
+'LMO (as 'M')
+'Description
+'UM (as Material UM)
+'PartWCOutside (as Part)
+'SetupTime (Total, not Quantity to Make 1)
+'Unit (Quantity to Make 1)
+'SortCode (as Part SortCode)
+
+'Labor:
+'OpCode (as OpCode) (Optional)
+'SetupFlag (Optional)
+'LMO (as 'L' or 'T')
+'Description
+'UM (as Labor UM)
+'PartWCOutside (as WC)
+'Machine1 (Optional)
+'Machine2 (Optional)
+'Machine3 (Optional)
+'Machine4 (Optional)
+'Machine5 (Optional)
+'SetupTime
+'Burden (Optional)
+'EstimatedHours
+'Rate
+'SortCode (as WC SortCode) (Optional)
+'SignoffUserOrGroup (Optional)
+'CompletionRequired (Optional)
+'Overlap (Optional)
+
+'Outside:
+'OpCode (as VendorNumber)
+'LMO (as 'O')
+'Description
+'UM (as Material UM)
+'PartWCOutside (as OutsideCode)
+'SetupTime
+'Unit
+'Burden (Optional)
+'OrderDate
+'Rate
+'SortCode (as Outside SortCode)
+'Overlap (Optional)
+
+'Comment:
+'OpCode (as OpCode) (Optional)
+'LMO (as 'C')
+'Description
+
+Program.Sub.Preflight.Start
+F.Data.DataTable.Create("UPLJOBST",True)
+F.Data.DataTable.AddColumn("UPLJOBST","WorkOrderNumber","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","WorkOrderSuffix","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","WorkOrderSequence","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","OpCode","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","SetupFlag","String","N")
+F.Data.DataTable.AddColumn("UPLJOBST","LMO","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","Description","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","UM","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","PartWCOutside","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","Machine1","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","Machine2","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","Machine3","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","Machine4","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","Machine5","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","RouterNumber","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","RouterSequence","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","SetupTime","Float",0)
+F.Data.DataTable.AddColumn("UPLJOBST","Unit","Float",0)
+F.Data.DataTable.AddColumn("UPLJOBST","Burden","Float",0)
+F.Data.DataTable.AddColumn("UPLJOBST","EstimatedHours","Float",0)
+F.Data.DataTable.AddColumn("UPLJOBST","StartDate","Date",1/1/1900)
+F.Data.DataTable.AddColumn("UPLJOBST","DueDate","Date",1/1/1900)
+F.Data.DataTable.AddColumn("UPLJOBST","OrderDate","Date",1/1/1900)
+F.Data.DataTable.AddColumn("UPLJOBST","Rate","Float",0)
+F.Data.DataTable.AddColumn("UPLJOBST","SortCode","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","ProjectGroup","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","SignoffUserOrGroup","String","")
+F.Data.DataTable.AddColumn("UPLJOBST","CompletionRequired","String","N")
+F.Data.DataTable.AddColumn("UPLJOBST","DoNotSaveChangesToRouter","String","Y")
+F.Data.DataTable.AddColumn("UPLJOBST","Overlap","Float",0)
+Program.Sub.Preflight.End
+
+Program.Sub.UPLJOBST.Start
+V.Local.sValue.Declare
+V.Local.sLine.Declare
+V.Local.sFile.Declare
+V.Local.sFilePath.Declare
+V.Local.iCnt.Declare
+V.Local.fValue.Declare
+F.Intrinsic.Control.Try
+
+'Loop through datatable and build string for JOBCOST.TXT file
+F.Intrinsic.Control.For(V.Local.iCnt,0,V.DataTable.UPLJOBST.RowCount--,1)
+	'Work Order Number (1 - 6) (6 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).WorkOrderNumber!FieldVal," ",6,V.Local.sValue)
+	V.Local.sLine.Set(V.Local.sValue.Left6)
+	'Work Order Suffix (7 - 9) (3 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).WorkOrderSuffix!FieldVal," ",3,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left3,V.Local.sLine)
+	'Work Order Sequence (10 - 15) (6 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).WorkOrderSequence!FieldVal," ",6,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left6,V.Local.sLine)
+	'Operation Code (16 - 21) (6 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).OpCode!FieldVal," ",6,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left6,V.Local.sLine)
+	'Set Up Flag (22) (1 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).SetupFlag!FieldVal," ",1,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left1,V.Local.sLine)
+	'LMOC (23) (1 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).LMO!FieldVal," ",1,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left1,V.Local.sLine)
+	'Description of Operation (24 - 53) (30 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).Description!FieldVal," ",30,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left30,V.Local.sLine)
+	'Unit of Measure (54 - 55) (2 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).UM!FieldVal," ",2,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left2,V.Local.sLine)
+	F.Intrinsic.Control.If(V.DataTable.UPLJOBST(V.Local.iCnt).LMO!FieldVal,=,"L",and,V.DataTable.UPLJOBST(V.Local.iCnt).PartWCOutside!FieldValTrim,=,"")
+		'Machine 1 (56 - 59) (4 char)
+		F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).Machine1!FieldVal," ",4,V.Local.sValue)
+		F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left4,V.Local.sLine)
+		'Machine 2 (60 - 63) (4 char)
+		F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).Machine2!FieldVal," ",4,V.Local.sValue)
+		F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left4,V.Local.sLine)
+		'Machine 3 (64 - 67) (4 char)
+		F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).Machine3!FieldVal," ",4,V.Local.sValue)
+		F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left4,V.Local.sLine)
+		'Machine 4 (68 - 71) (4 char)
+		F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).Machine4!FieldVal," ",4,V.Local.sValue)
+		F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left4,V.Local.sLine)
+		'Machine 5 (72 - 75) (4 char)
+		F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).Machine5!FieldVal," ",4,V.Local.sValue)
+		F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left4,V.Local.sLine)
+	F.Intrinsic.Control.Else
+		'PWC (56 - 75) (20 char)
+		F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).PartWCOutside!FieldVal," ",20,V.Local.sValue)
+		F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left20,V.Local.sLine)
+	F.Intrinsic.Control.EndIf
+	'Router Number (76 - 95) (20 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).RouterNumber!FieldVal," ",20,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left20,V.Local.sLine)
+	'Router Sequence (96 - 101) (6 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).RouterSequence!FieldVal," ",6,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left6,V.Local.sLine)
+	'Setup Time (102 - 117) (16 char)
+	F.Intrinsic.Math.Abs(V.DataTable.UPLJOBST(V.Local.iCnt).SetupTime!FieldVal,V.Local.fValue)
+	F.Intrinsic.String.Split(V.Local.fValue.String,".",V.Local.sValue)
+	F.Intrinsic.Control.If(V.Local.sValue.UBound,=,1)
+		F.Intrinsic.String.LPad(V.Local.sValue(0),"0",8,V.Local.sValue(0))
+		V.Local.sValue(0).Set(V.Local.sValue(0).Right8)
+		F.Intrinsic.String.RPad(V.Local.sValue(1),"0",4,V.Local.sValue(1))
+		V.Local.sValue(1).Set(V.Local.sValue(1).Left4)
+		F.Intrinsic.String.Join(V.Local.sValue,".",V.Local.sValue)
+		V.Local.sValue.RedimPreserve(0,0)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.LPad(V.Local.sValue,"0",8,V.Local.sValue)
+		V.Local.sValue.Set(V.Local.sValue.Right8)
+		F.Intrinsic.String.Build("{0}.0000",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.DataTable.UPLJOBST(V.Local.iCnt).SetupTime!FieldVal,<,0)
+		F.Intrinsic.String.Build("-{0}",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.String.RPad(V.Local.sValue," ",16,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left16,V.Local.sLine)
+	'Unit (118 - 133) (16 char)
+	F.Intrinsic.Math.Abs(V.DataTable.UPLJOBST(V.Local.iCnt).Unit!FieldVal,V.Local.fValue)
+	F.Intrinsic.String.Split(V.Local.fValue.String,".",V.Local.sValue)
+	F.Intrinsic.Control.If(V.Local.sValue.UBound,=,1)
+		F.Intrinsic.String.LPad(V.Local.sValue(0),"0",8,V.Local.sValue(0))
+		V.Local.sValue(0).Set(V.Local.sValue(0).Right8)
+		F.Intrinsic.String.RPad(V.Local.sValue(1),"0",4,V.Local.sValue(1))
+		V.Local.sValue(1).Set(V.Local.sValue(1).Left4)
+		F.Intrinsic.String.Join(V.Local.sValue,".",V.Local.sValue)
+		V.Local.sValue.RedimPreserve(0,0)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.LPad(V.Local.sValue,"0",8,V.Local.sValue)
+		V.Local.sValue.Set(V.Local.sValue.Right8)
+		F.Intrinsic.String.Build("{0}.0000",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.DataTable.UPLJOBST(V.Local.iCnt).Unit!FieldVal,<,0)
+		F.Intrinsic.String.Build("-{0}",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.String.RPad(V.Local.sValue," ",16,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left16,V.Local.sLine)
+	'Burden Rate (134 - 149) (16 char)
+	F.Intrinsic.Math.Abs(V.DataTable.UPLJOBST(V.Local.iCnt).Burden!FieldVal,V.Local.fValue)
+	F.Intrinsic.String.Split(V.Local.fValue.String,".",V.Local.sValue)
+	F.Intrinsic.Control.If(V.Local.sValue.UBound,=,1)
+		F.Intrinsic.String.LPad(V.Local.sValue(0),"0",8,V.Local.sValue(0))
+		V.Local.sValue(0).Set(V.Local.sValue(0).Right8)
+		F.Intrinsic.String.RPad(V.Local.sValue(1),"0",4,V.Local.sValue(1))
+		V.Local.sValue(1).Set(V.Local.sValue(1).Left4)
+		F.Intrinsic.String.Join(V.Local.sValue,".",V.Local.sValue)
+		V.Local.sValue.RedimPreserve(0,0)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.LPad(V.Local.sValue,"0",8,V.Local.sValue)
+		V.Local.sValue.Set(V.Local.sValue.Right8)
+		F.Intrinsic.String.Build("{0}.0000",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.DataTable.UPLJOBST(V.Local.iCnt).Burden!FieldVal,<,0)
+		F.Intrinsic.String.Build("-{0}",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.String.RPad(V.Local.sValue," ",16,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left16,V.Local.sLine)
+	'Estimated Hours (150 - 165) (16 char)
+	F.Intrinsic.Math.Abs(V.DataTable.UPLJOBST(V.Local.iCnt).EstimatedHours!FieldVal,V.Local.fValue)
+	F.Intrinsic.String.Split(V.Local.fValue.String,".",V.Local.sValue)
+	F.Intrinsic.Control.If(V.Local.sValue.UBound,=,1)
+		F.Intrinsic.String.LPad(V.Local.sValue(0),"0",8,V.Local.sValue(0))
+		V.Local.sValue(0).Set(V.Local.sValue(0).Right8)
+		F.Intrinsic.String.RPad(V.Local.sValue(1),"0",4,V.Local.sValue(1))
+		V.Local.sValue(1).Set(V.Local.sValue(1).Left4)
+		F.Intrinsic.String.Join(V.Local.sValue,".",V.Local.sValue)
+		V.Local.sValue.RedimPreserve(0,0)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.LPad(V.Local.sValue,"0",8,V.Local.sValue)
+		V.Local.sValue.Set(V.Local.sValue.Right8)
+		F.Intrinsic.String.Build("{0}.0000",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.DataTable.UPLJOBST(V.Local.iCnt).EstimatedHours!FieldVal,<,0)
+		F.Intrinsic.String.Build("-{0}",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.String.RPad(V.Local.sValue," ",16,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left16,V.Local.sLine)
+	'Start Date (166 - 171) (6 char)
+	F.Intrinsic.String.Format(V.DataTable.UPLJOBST(V.Local.iCnt).StartDate!FieldVal,"MMDDYY",V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue,V.Local.sLine)
+	'Due Date (172 - 177) (6 char)
+	F.Intrinsic.String.Format(V.DataTable.UPLJOBST(V.Local.iCnt).DueDate!FieldVal,"MMDDYY",V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue,V.Local.sLine)
+	'Order Date (178 - 183) (6 char)
+	F.Intrinsic.String.Format(V.DataTable.UPLJOBST(V.Local.iCnt).OrderDate!FieldVal,"MMDDYY",V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue,V.Local.sLine)
+	'Rate (184 - 199) (16 char)
+	F.Intrinsic.Math.Abs(V.DataTable.UPLJOBST(V.Local.iCnt).Rate!FieldVal,V.Local.fValue)
+	F.Intrinsic.String.Split(V.Local.fValue.String,".",V.Local.sValue)
+	F.Intrinsic.Control.If(V.Local.sValue.UBound,=,1)
+		F.Intrinsic.String.LPad(V.Local.sValue(0),"0",8,V.Local.sValue(0))
+		V.Local.sValue(0).Set(V.Local.sValue(0).Right8)
+		F.Intrinsic.String.RPad(V.Local.sValue(1),"0",4,V.Local.sValue(1))
+		V.Local.sValue(1).Set(V.Local.sValue(1).Left4)
+		F.Intrinsic.String.Join(V.Local.sValue,".",V.Local.sValue)
+		V.Local.sValue.RedimPreserve(0,0)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.LPad(V.Local.sValue,"0",8,V.Local.sValue)
+		V.Local.sValue.Set(V.Local.sValue.Right8)
+		F.Intrinsic.String.Build("{0}.0000",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.DataTable.UPLJOBST(V.Local.iCnt).Rate!FieldVal,<,0)
+		F.Intrinsic.String.Build("-{0}",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.String.RPad(V.Local.sValue," ",16,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left16,V.Local.sLine)
+	'Sort Code (200 - 219) (20 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).SortCode!FieldVal," ",20,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left20,V.Local.sLine)
+	'Project Group (220 - 225) (6 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).ProjectGroup!FieldVal," ",6,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left6,V.Local.sLine)
+	'Signoff User/Group ID (226 - 233) (8 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).SignoffUserOrGroup!FieldVal," ",8,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left8,V.Local.sLine)
+	'Completion Required for Next Sequence Flag (234) (1 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).CompletionRequired!FieldVal," ",1,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left1,V.Local.sLine)
+	'Do Not Save Changes Back To Router (235) (1 char)
+	F.Intrinsic.String.RPad(V.DataTable.UPLJOBST(V.Local.iCnt).DoNotSaveChangesToRouter!FieldVal," ",1,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left1,V.Local.sLine)
+	'Overlap (236 - 251) (16 char)
+	F.Intrinsic.Math.Abs(V.DataTable.UPLJOBST(V.Local.iCnt).Overlap!FieldVal,V.Local.fValue)
+	F.Intrinsic.String.Split(V.Local.fValue.String,".",V.Local.sValue)
+	F.Intrinsic.Control.If(V.Local.sValue.UBound,=,1)
+		F.Intrinsic.String.LPad(V.Local.sValue(0),"0",2,V.Local.sValue(0))
+		V.Local.sValue(0).Set(V.Local.sValue(0).Right2)
+		V.Local.sValue(1).Set("")
+		F.Intrinsic.String.Join(V.Local.sValue,".",V.Local.sValue)
+		V.Local.sValue.RedimPreserve(0,0)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.LPad(V.Local.sValue,"0",2,V.Local.sValue)
+		V.Local.sValue.Set(V.Local.sValue.Right2)
+		F.Intrinsic.String.Build("{0}.",V.Local.sValue,V.Local.sValue)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.String.RPad(V.Local.sValue," ",16,V.Local.sValue)
+	F.Intrinsic.String.Build("{0}{1}",V.Local.sLine,V.Local.sValue.Left16,V.Local.sLine)
+	
+	F.Intrinsic.Control.If(V.Local.sFile.Trim,=,"")
+		V.Local.sFile.Set(V.Local.sLine)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("{0}{1}{2}",V.Local.sFile,V.Ambient.NewLine,V.Local.sLine,V.Local.sFile)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Next(V.Local.iCnt)
+
+F.Data.DataTable.DeleteRow("UPLJOBST")
+
+F.Intrinsic.Control.If(V.Local.sFile.Trim,!=,"")
+	'Write file and run program
+	F.Intrinsic.String.Build("{0}\JOBCOST.TXT",V.Caller.FilesDir,V.Local.sFilePath)
+	F.Intrinsic.File.String2File(V.Local.sFilePath,V.Local.sFile)
+	F.Global.General.CallWrapperSync(50,"UPLJOBST/U")
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessageUPLJOBST,"ScriptFile",V.Caller.ScriptFile,"CurrentSubroutine",V.Ambient.CurrentSubroutine)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.UPLJOBST.End
+
+Program.Sub.ErrorMessageUPLJOBST.Start
+'Arguments: ScriptFile, CurrentSubroutine
+V.Local.sError.Declare
+F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Args.ScriptFile,V.Ambient.Newline,V.Args.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+F.Intrinsic.UI.Msgbox(V.Local.sError)
+Program.Sub.ErrorMessageUPLJOBST.End
